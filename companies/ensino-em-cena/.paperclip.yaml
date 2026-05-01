@@ -1,0 +1,14 @@
+schema: paperclip/v1
+agents:
+  marketing:
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
+  comercial:
+    inputs:
+      env:
+        GH_TOKEN:
+          kind: secret
+          requirement: optional
