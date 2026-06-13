@@ -1,14 +1,126 @@
 schema: paperclip/v1
+
+# Integrações externas — placeholders documentados.
+# Quando o adapter MCP correspondente estiver disponível no ambiente,
+# Paperclip injeta as credenciais/clientes para os agentes listados em `agents`.
+integrations:
+  canva:
+    description: Geração de peças visuais (posts, releases, encartes, cadernos)
+    agents: [marketing, produtor-conteudo, diretor-artistico]
+
+  google-calendar:
+    description: Agenda institucional, turnê e rotinas
+    agents: [ceo, operacoes, comercial]
+
+  google-drive:
+    description: Biblioteca central de materiais, contratos e arquivos
+    agents: [ceo, diretor-artistico, coordenador-pedagogico, produtor-conteudo, marketing, comercial, operacoes]
+
+  email:
+    description: Comunicação externa com escolas, secretarias e imprensa
+    agents: [ceo, comercial, marketing, operacoes]
+    notes: requer conta institucional configurada (ex.: contato@ensinoemcena.com.br)
+
+  whatsapp:
+    description: Comunicação direta com escolas em rota e leads quentes
+    agents: [comercial, operacoes]
+    notes: requer WhatsApp Business API ou integração equivalente
+
+  crm:
+    description: Pipeline comercial, leads e contratos
+    agents: [comercial, marketing, ceo]
+    notes: definir provedor (RD Station, HubSpot ou solução custom)
+
+  social-scheduler:
+    description: Agendamento e publicação automática em Instagram, TikTok, Facebook
+    agents: [marketing]
+    notes: ex.: Meta Business Suite, Buffer, Later
+
+  ads-manager:
+    description: Campanhas pagas — Meta Ads, Google Ads, LinkedIn Ads
+    agents: [marketing]
+    notes: requer contas e credenciais por plataforma
+
 agents:
+  ceo:
+    inputs:
+      env: {}
+
+  diretor-artistico:
+    inputs:
+      env: {}
+
+  coordenador-pedagogico:
+    inputs:
+      env: {}
+
+  produtor-conteudo:
+    inputs:
+      env: {}
+
   marketing:
     inputs:
       env:
-        GH_TOKEN:
+        META_ADS_TOKEN:
           kind: secret
           requirement: optional
+        GOOGLE_ADS_TOKEN:
+          kind: secret
+          requirement: optional
+        INSTAGRAM_ACCESS_TOKEN:
+          kind: secret
+          requirement: optional
+
   comercial:
     inputs:
       env:
-        GH_TOKEN:
+        CRM_API_KEY:
           kind: secret
           requirement: optional
+        WHATSAPP_API_TOKEN:
+          kind: secret
+          requirement: optional
+
+  operacoes:
+    inputs:
+      env:
+        WHATSAPP_API_TOKEN:
+          kind: secret
+          requirement: optional
+
+# Governança — regras codificadas
+governance:
+  budget:
+    monthly_per_agent_brl:
+      ceo: null
+      marketing: 5000
+      comercial: 2000
+      operacoes: 3000
+      diretor-artistico: 1500
+      coordenador-pedagogico: 1500
+      produtor-conteudo: 1000
+
+  approval_gates:
+    - name: desconto-cache-alto
+      trigger: cachê com desconto > 10% OU abaixo do teto da tabela
+      requires: board_approval
+      owner: ceo
+      requester: comercial
+
+    - name: novo-espetaculo
+      trigger: criação de novo espetáculo no catálogo
+      requires: board_approval
+      owner: ceo
+      requester: diretor-artistico
+
+    - name: campanha-paga-acima-teto
+      trigger: campanha de anúncios com verba > R$ 3.000/mês
+      requires: board_approval
+      owner: ceo
+      requester: marketing
+
+    - name: parceria-institucional
+      trigger: parcerias com redes/secretarias ou contratos > R$ 50.000
+      requires: board_approval
+      owner: ceo
+      requester: comercial
