@@ -8,7 +8,7 @@ Aplicado após contrato assinado, antes da primeira apresentação/projeto.
 2. **D-21** — Operações entra em contato para confirmar logística do dia
 3. **D-14** — Coord. Pedagógico envia guia do professor à coordenação da escola
 4. **D-7** — Operações envia briefing logístico final (template)
-5. **D-2** — Lembrete por WhatsApp
+5. **D-2** — Lembrete por e-mail na thread da escola (`mcp__Gmail__reply`, `replyAll=true`). *WhatsApp pendente — sem integração nesta configuração; se a coordenação exigir WhatsApp, o agente redige a mensagem e uma pessoa envia.*
 6. **D-0** — Apresentação/início do projeto
 7. **D+1** — Operações envia formulário de feedback
 8. **D+7** — Comercial faz contato para fidelização/nova venda
@@ -27,3 +27,7 @@ Aplicado após contrato assinado, antes da primeira apresentação/projeto.
 - `library/templates/briefing-logistico.md`
 - `library/templates/guia-professor.md`
 - Formulário de feedback (link no Drive)
+
+## Limites
+
+Nenhum passo deste playbook é enviado por WhatsApp — **não há integração de WhatsApp** nesta configuração. Toda a comunicação com a escola vai por e-mail (`mcp__Gmail__`). Datas confirmadas não são lançadas no Calendar pelo agente (`mcp__Google_Calendar__search_events` é somente leitura): o agente entrega os dados do evento e uma pessoa lança.

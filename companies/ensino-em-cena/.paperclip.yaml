@@ -1,45 +1,162 @@
 schema: paperclip/v1
 
-# Integrações externas — placeholders documentados.
-# Quando o adapter MCP correspondente estiver disponível no ambiente,
-# Paperclip injeta as credenciais/clientes para os agentes listados em `agents`.
+# Integrações externas — cada entrada aponta o servidor MCP real e o status.
+# `status: live` = servidor MCP acessível nesta configuração; Paperclip injeta o
+# cliente para os agentes listados em `agents`.
+# `status: pending` = ainda NÃO conectado; o agente não deve prometer a operação.
 integrations:
-  canva:
-    description: Geração de peças visuais (posts, releases, encartes, cadernos)
-    agents: [marketing, produtor-conteudo, diretor-artistico]
-
-  google-calendar:
-    description: Agenda institucional, turnê e rotinas
-    agents: [ceo, operacoes, comercial]
+  email:
+    description: Comunicação externa com escolas, secretarias e imprensa — prospecção, propostas, logística e releases
+    mcp_server: mcp__Gmail__
+    agents: [ceo, comercial, marketing, operacoes]
+    status: live
+    notes: >-
+      Fluxo obrigatório em prospecção e imprensa: create_draft + revisão humana
+      antes de send_message (e-mail frio em volume queima reputação do domínio).
+      Funil por labels (create_label / label_thread / update_message_labels).
+      Armadilhas: search_threads mostra preview só das ~5 mensagens MAIS ANTIGAS
+      da thread — sempre chamar get_thread antes de responder sobre o retorno
+      mais recente; update_draft apaga anexos não reenviados. Não há envio em
+      lote, agendamento de envio nem leitura de contatos (a base de escolas vem
+      de planilha no Drive ou do histórico).
 
   google-drive:
-    description: Biblioteca central de materiais, contratos e arquivos
+    description: Biblioteca central de roteiros, contratos, fichas técnicas, guias do professor e fotos
+    mcp_server: mcp__Google_Drive__
     agents: [ceo, diretor-artistico, coordenador-pedagogico, produtor-conteudo, marketing, comercial, operacoes]
+    status: live
+    notes: >-
+      Todo fluxo começa em search_files / list_recent_files para obter o fileId
+      real — read_file_content rejeita ID inventado. Limitações: update_file muda
+      só título e pasta, NÃO o conteúdo (revisar roteiro exige create_file novo +
+      trash_file do antigo); share_file apenas eleva permissão, não revoga —
+      remoção de acesso a contrato assinado ou foto de aluno é feita na interface
+      do Drive; usar disableConversionToGoogleType ao subir PDF assinado ou foto
+      original.
 
-  email:
-    description: Comunicação externa com escolas, secretarias e imprensa
-    agents: [ceo, comercial, marketing, operacoes]
-    notes: requer conta institucional configurada (ex.: contato@ensinoemcena.com.br)
+  google-calendar:
+    description: Agenda institucional, turnê e rotinas — consulta apenas
+    mcp_server: mcp__Google_Calendar__
+    agents: [ceo, operacoes, comercial]
+    status: live
+    notes: >-
+      SOMENTE LEITURA e apenas na agenda primária: a única ferramenta exposta é
+      search_events. Não cria, move nem cancela evento, não consulta
+      disponibilidade e não filtra por data. Datas fechadas com escolas devem ser
+      lançadas manualmente por uma pessoa; o agente usa search_events para
+      conferir o que realmente entrou na agenda.
+
+  canva:
+    description: Peças visuais e materiais de marca — posts, encartes, cadernos do aluno, guias do professor e propostas comerciais
+    mcp_server: mcp__Canva__
+    agents: [marketing, produtor-conteudo, coordenador-pedagogico, comercial]
+    status: live
+    notes: >-
+      Fluxo: search-brand-templates → create-design-from-brand-template →
+      read-design (open_transaction) → edit-design → finalize. Não há ferramenta
+      de exportação nesta sessão — a entrega sai como URL de design do Canva, não
+      como PDF baixado; para PDF impresso o caminho é a família PDF do servidor
+      Adobe. Também não há upload de asset, então fotos novas de espetáculo
+      entram pela interface do Canva. Geração em lote (uma peça por turma ou por
+      escola) é feita em laço, não por autofill.
+
+  adobe-fonts:
+    description: Tipografia da marca — paletas tipográficas, ativação de fontes e kit web
+    mcp_server: mcp__Adobe_for_creativity__
+    agents: [produtor-conteudo, marketing]
+    status: live
+    notes: >-
+      Fluxo: suggest_type_palettes → get_type_palette → font_preview →
+      font_styles → font_activate → font_create_kit. Usar
+      writing_systems 'latn' para garantir acentuação do português. font_activate
+      é uma fonte por chamada e libera a fonte só dentro dos apps Adobe — não
+      instala no sistema e não vale dentro do Canva (a tipografia do Canva é
+      configurada no Brand Kit). O servidor exige chamar adobe_mandatory_init uma
+      vez antes de qualquer outra ferramenta Adobe.
+
+  freepik-magnific:
+    description: Imagem, vídeo e áudio de divulgação — key art, trailers, trilha, efeitos sonoros e legendagem
+    mcp_server: mcp__Magnific__
+    agents: [marketing, diretor-artistico, produtor-conteudo]
+    status: live
+    notes: >-
+      Imagem: images_retouch (limpar equipe e sujeira de cena), images_expand
+      (mesma foto em 9:16, 1:1 e 21:9), upscale para impressão. Vídeo:
+      video_magic_cut, video_extend, video_color_grade, video_crop. Áudio:
+      audio_sfx_generate para cues, video_music com mixMode lower, audio_isolate
+      para voz gravada em lugar barulhento; creations_deliver entrega WAV 48k ao
+      operador de som e PSD em camadas ao designer. Acessibilidade: legendas em
+      português por video_dubbing (ou preview → preview_get → confirm para
+      revisão antes de cobrar), limite de 120s por vídeo — gravações longas
+      precisam ser fatiadas. video_vfx / video_color_grade / video_magic_cut
+      exigem plano pago. Arquivos locais entram só por creations_upload_show.
+      Nunca expor identificadores internos da ferramenta para a equipe — usar
+      título e webUrl.
+
+  vercel:
+    description: Site institucional ensinoemcena.com.br — publicação, domínios e atribuição de leads
+    mcp_server: mcp__Vercel__
+    agents: [marketing]
+    status: live
+    notes: >-
+      Publicação e rollback por create_deployment; domínios por
+      list_project_domains / add_project_domain. Atribuição: aggregate_pageviews
+      por ['utmCampaign','requestPath'] e aggregate_events por
+      ['eventName','utmCampaign'] para ver qual campanha gerou inscrição;
+      create_observability_query com bucketTimezone America/Sao_Paulo. Requisitos:
+      as UTMs precisam estar aplicadas ANTES do lançamento da campanha (sem isso
+      a atribuição é irrecuperável) e o Web Analytics só cobre produção a partir
+      da ativação. Confirmar com list_project_domains que o domínio está mesmo
+      neste projeto antes de planejar o relatório. Atenção: record_events é
+      telemetria de cache de build (Turborepo), NÃO analytics de marketing.
 
   whatsapp:
     description: Comunicação direta com escolas em rota e leads quentes
+    mcp_server: null
     agents: [comercial, operacoes]
-    notes: requer WhatsApp Business API ou integração equivalente
+    status: pending
+    notes: >-
+      NÃO conectado. Não existe servidor MCP de WhatsApp neste ambiente — nenhum
+      agente deve prometer envio por WhatsApp. Pendências: contratar WhatsApp
+      Business API (ou provedor equivalente), aprovar templates de mensagem e
+      expor um adapter MCP. Enquanto isso, confirmação de logística com a escola
+      vai por e-mail (mcp__Gmail__reply com replyAll).
 
   crm:
     description: Pipeline comercial, leads e contratos
+    mcp_server: null
     agents: [comercial, marketing, ceo]
-    notes: definir provedor (RD Station, HubSpot ou solução custom)
+    status: pending
+    notes: >-
+      NÃO conectado. Falta definir provedor (RD Station, HubSpot ou solução
+      própria) e expor adapter MCP. Paliativo aprovado: funil por labels do Gmail
+      ('Prospeccao/Contato-inicial', 'Proposta/Enviada', 'Proposta/Aprovada') com
+      update_message_labels, e a base de escolas em planilha no Drive — não é CRM
+      e não deve ser apresentado como tal.
 
   social-scheduler:
     description: Agendamento e publicação automática em Instagram, TikTok, Facebook
+    mcp_server: null
     agents: [marketing]
-    notes: ex.: Meta Business Suite, Buffer, Later
+    status: pending
+    notes: >-
+      NÃO conectado. Não há publicação nem agendamento automático em rede social
+      neste ambiente. As peças são PRODUZIDAS (mcp__Canva__,
+      mcp__Magnific__) e a publicação é manual por uma pessoa.
+      Pendências: conta Meta Business Suite / Buffer / Later e adapter MCP.
 
   ads-manager:
     description: Campanhas pagas — Meta Ads, Google Ads, LinkedIn Ads
+    mcp_server: null
     agents: [marketing]
-    notes: requer contas e credenciais por plataforma
+    status: pending
+    notes: >-
+      NÃO conectado. Nenhuma campanha paga pode ser criada, pausada ou lida por
+      agente. Pendências: contas e credenciais por plataforma e adapter MCP.
+      O que já é possível hoje é medir o RESULTADO no site via mcp__Vercel__,
+      desde que as UTMs sejam aplicadas manualmente na criação da campanha.
+      O gate `campanha-paga-acima-teto` continua valendo quando a integração
+      entrar.
 
 agents:
   ceo:

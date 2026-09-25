@@ -10,7 +10,7 @@ Após cada apresentação ou marco de projeto.
 ## D+1
 
 - Operações envia formulário de feedback à escola
-- Marketing posta bastidores (com autorização)
+- Marketing **prepara** o post de bastidores (peça no Canva + legenda + hashtags), arquiva no Drive e entrega ao responsável pela publicação — **publicação manual, sem agendador de redes conectado** — mediante autorização de uso de imagem
 
 ## D+7
 
@@ -29,3 +29,7 @@ Após cada apresentação ou marco de projeto.
 
 - Formulário de feedback (link Drive)
 - Pasta de fotos do evento (link Drive)
+
+## Limites
+
+Nenhum passo deste playbook publica em rede social — **não há agendador conectado**. O Marketing produz a peça (`mcp__Canva__`, `mcp__Magnific__`), arquiva no Drive e entrega para publicação manual. O follow-up com a escola vai por e-mail (`mcp__Gmail__`); **WhatsApp segue pendente**.
