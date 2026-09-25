@@ -80,11 +80,23 @@ ensino-em-cena/
 
 ## Getting Started
 
-Para importar este pacote no Paperclip:
+A importação é feita pela interface web, em **Company → Import** (`/company/import`). Não existe comando de CLI para isso.
+
+Há duas origens aceitas:
+
+**1. Arquivo `.zip`** — compacte a pasta do pacote e envie:
 
 ```bash
-paperclipai company import --from ./companies/ensino-em-cena
+cd companies && zip -r ensino-em-cena.zip ensino-em-cena
 ```
+
+**2. URL do GitHub** — aponte direto para a pasta no repositório:
+
+```
+https://github.com/<owner>/<repo>/tree/<branch>/companies/ensino-em-cena
+```
+
+Em ambos os casos a tela mostra uma prévia (agentes, projetos, tarefas e skills detectados) antes de aplicar, e permite escolher entre criar uma empresa nova ou importar para uma existente.
 
 ## Referências
 
